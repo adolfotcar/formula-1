@@ -15,7 +15,7 @@ dir.create(racesPath, showWarnings = FALSE)
 
 racesWeathers = c()
 racesTitles = c()
-for (year in 2017:2017){
+for (year in 1950:2021){
   print(year)
   #link to the season main page
   homeLink = paste("https://www.statsf1.com/en/", year, ".aspx", sep="")
@@ -27,6 +27,8 @@ for (year in 2017:2017){
     racePage = read_html(raceLink)
     
     weather = html_attr(html_nodes(racePage, ".GPmeteo img"), "alt")
+    if (identical(weather, character(0)))
+      weather = "Sunny"
     titleAndYear = html_text(html_nodes(racePage, ".navcenter a"))
     raceTitle = ""
     for (titleElement in titleAndYear){
@@ -38,8 +40,6 @@ for (year in 2017:2017){
   }
 }
 
-print(racesTitles)
-print(racesWeathers)
 races = data.frame(racesTitles, racesWeathers, stringsAsFactors = FALSE)
 write.table(races, paste(racesPath, "races.csv", sep=""), sep="\t", row.names = FALSE)
 
