@@ -1,0 +1,26 @@
+{
+    "id": "012B51B5",
+    "path": "~/Documents/formula1/R/scraper_races.r",
+    "project_path": "scraper_races.r",
+    "type": "r_source",
+    "hash": "217753688",
+    "contents": "",
+    "dirty": false,
+    "created": 1642290664724.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "5,32",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1642291508,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1642291508988,
+    "read_only": false,
+    "read_only_alternatives": []
+}

@@ -1,0 +1,53 @@
+#this script loads individual stats for each driver
+#data acquired from F1 fansite, only used as a backup in case the official data is corrupted
+
+
+#used to harvest our data
+library(rvest)
+#used to remove accentuation from the drivers names
+library(stringr)
+
+#creates a directory for our datasets
+dir.create("../datasets/", showWarnings = FALSE)
+dir.create("../datasets/lineups/", showWarnings = FALSE)
+
+alphabet = c("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z")
+
+for (letter in alphabet){
+  homeLink = paste("https://www.statsf1.com/en/constructeurs-", letter, ".aspx", sep="")
+  homePage = read_html(homeLink)
+  links = html_attr(html_nodes(homePage, "td:nth-child(1) a"), "href")
+  team = html_text(html_nodes(homePage, "td:nth-child(1) a"))
+  
+  for (link in links){
+    driverName = substr(link, 5, nchar(link)-5)
+    fileName = paste("../datasets/lineups/", driverName, ".csv", sep="")
+    if (file.exists(fileName)) {
+      print(fileName)
+      next
+    }
+    if 9
+    teamLink = paste("https://www.statsf1.com", substr(link, 1, nchar(link)-5), "/saison.aspx", sep="")
+    teamPage = read_html(teamLink)
+    
+    lineups = html_text2(html_nodes(teamPage, "#ctl00_CPH_Main_GV_Stats tbody td"))
+    
+    year = c()
+    name = c()
+    cell = 1
+    while (cell<length(lineups)){
+      year = lineups[c]
+      lineup = str_split(substr(lineups[cell+1], 1, nchar(lineups[cell+1])-1), "\n")
+      for (drivers in lineup){
+        for (driver in drivers){
+          year = c(year, year)
+          name = c(name, driver)
+        }
+      }
+      cell = cell+15
+    }
+    lineupData = data.frame(years, names, stringsAsFactors = FALSE)
+    write.table(lineupData, fileName, sep="\t", row.names = FALSE)
+    Sys.sleep(0.3)
+  }
+}
