@@ -72,6 +72,7 @@ class BaseScore(BASE):
 	wins_not_from_pole = Column(Integer)
 	starting_position = Column(Integer)
 	champion_this_season = Column(Boolean)
+	better_than_teammate = Column(Boolean)
 
 class RefinedScore(BASE):
 	__tablename__ = "refined_scores"

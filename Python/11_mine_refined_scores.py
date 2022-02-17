@@ -126,6 +126,12 @@ for ids in idLists:
 						else:
 							startAheadOfMate += 1
 				teamPoints = driverPoints+matePoints
+				dbBaseScore = SESSION.query(BaseScore).filter(BaseScore.driver_id==driverId, BaseScore.year==season.year).first()
+				dbBaseScore.better_than_teammate = 1 if finishAheadOfMate>(racesTogether/2) else 0
+				SESSION.commit()
+				dbBaseScore2 = SESSION.query(BaseScore).filter(BaseScore.driver_id==teamMate.driver_id, BaseScore.year==season.year).first()
+				dbBaseScore2.better_than_teammate = 1 if finishAheadOfMate<=math.floor(racesTogether/2) else 0
+				SESSION.commit()				
 				#only increments season score, if they actually had at least one race together
 				if racesTogether!=0:
 					#if the team didnt score any points, have to avoid division by 0
