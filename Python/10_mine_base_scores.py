@@ -1,4 +1,4 @@
-#calculates the parameters for base scores
+#calculates and saves the parameters for base scores
 #saves one line per season per driver
 
 from db import Driver, Race, RaceResult, BaseScore, RefinedScore, Champion, Standing, Lineup, SESSION
@@ -7,39 +7,37 @@ import pandas
 import os
 import math
 
+#from the retirement reson, detects when it was caused by some form of collision
 crashesStrings = ['accident', 'collision', 'avoiding action', 'crash', 'spun', 'spin', 'handling', 'hit']
+#current point system, must be used universally for better consistency
 points = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+#loading all drivers
 drivers = SESSION.query(Driver).order_by(Driver.name, Driver.surname).all()
 for driver in drivers:
 	print("Filling base scores of "+driver.name+" "+driver.surname+"...")
-	driverChampionships = SESSION.query(func.count(Champion.driver_id).label("count")).filter(Champion.driver_id==driver.id).first()
+	#loading all seasons
 	seasons = SESSION.query(Race.year).join(RaceResult).filter(RaceResult.driver_id==driver.id).group_by(Race.year).all()
-	driverCareerRaces = SESSION.query(func.count(RaceResult.driver_id).label("count")).filter(RaceResult.driver_id==driver.id).first()
-	seasonCounter = 0
 	for season in seasons:
-		seasonCounter += 1
 		year = season.year
-		driverSeasonRaces = SESSION.query(RaceResult).join(Race).filter(Race.year==year, RaceResult.driver_id==driver.id).all()
-		racesRecord = SESSION.query(func.count(RaceResult.driver_id).label("count")).join(Race).filter(Race.year<=year).group_by(RaceResult.driver_id).order_by(text("count desc")).first()
-		driverRaces = SESSION.query(func.count(RaceResult.driver_id).label("count")).join(Race).filter(Race.year<=year, RaceResult.driver_id==driver.id).group_by(RaceResult.driver_id).order_by(text("count desc")).first()
+		#how many races were in this season
 		seasonRaces = SESSION.query(func.count(Race.id).label("count")).filter(Race.year==year).first()
+		#how many races the driver raced in his career up to this year
+		driverRaces = SESSION.query(func.count(RaceResult.driver_id).label("count")).join(Race).filter(Race.year<=year, RaceResult.driver_id==driver.id).group_by(RaceResult.driver_id).order_by(text("count desc")).first()
+		#record of most raced by a single driver up to this year
+		racesRecord = SESSION.query(func.count(RaceResult.driver_id).label("count")).join(Race).filter(Race.year<=year).group_by(RaceResult.driver_id).order_by(text("count desc")).first()
+		#how many championships the driver won up to this year
+		driverChampionships = SESSION.query(func.count(Champion.driver_id).label("count")).filter(Champion.driver_id==driver.id, Champion.year<=year).first()
+		#record of most championships up to this season
+		championshipsRecord = SESSION.query(func.count(Champion.driver_id).label("count")).filter(Champion.year<=year).group_by(Champion.driver_id).order_by(text("count desc")).first()
+		#who was the champions this season
 		seasonChampion = SESSION.query(Champion.driver_id).filter(Champion.year==year).first()
-		if seasonChampion.driver_id!=driver.id:
-			driverTeam = SESSION.query(Lineup.team).filter(Lineup.year==year, Lineup.driver_id==driver.id).order_by(text("total_races desc")).first()
-			driverPoints = SESSION.query(Standing.points).filter(Standing.year==year, Standing.driver_id==driver.id).first()
-			teamMates = [teammate.driver_id for teammate in SESSION.query(Lineup.driver_id).filter(Lineup.year==year, Lineup.team==driverTeam.team, Lineup.driver_id!=driver.id).all()]
-			teamMatesPoints = SESSION.query(func.sum(Standing.points).label("sum")).filter(Standing.year==year, Standing.driver_id.in_(teamMates)).first()
-			if driverPoints==None:
-				betterInTeam = 0
-			elif teamMatesPoints.sum==None:
-				betterInTeam = 1
-			else:
-				betterInTeam = driverPoints.points>teamMatesPoints.sum
-		else:
-			betterInTeam = True
+
 		wins = winsNotFromPole = poles = podiums = frontRows = wetRaces = wetWins = wetPodiums = \
 		gainedPositions = lostPositions = retirementForCollisions = driverPoints = startingPosition = 0
+		#the races that the driver raced this season
+		driverSeasonRaces = SESSION.query(RaceResult).join(Race).filter(Race.year==year, RaceResult.driver_id==driver.id).all()		
 		for raceResult in driverSeasonRaces:
+			#some drivers were enrolled in the race but never started
 			if not str(raceResult.starting_position).isnumeric():
 				continue
 			startingPosition += raceResult.starting_position
@@ -85,16 +83,16 @@ for driver in drivers:
 			wet_podiums = wetPodiums, \
 			gained_positions = gainedPositions, \
 			lost_positions = lostPositions, \
-			retirements_for_colisions = retirementForCollisions, \
+			retirements_for_collisions = retirementForCollisions, \
 			points = driverPoints, \
 			wins_not_from_pole = winsNotFromPole,\
 			starting_position = startingPosition, \
 			season_races = seasonRaces.count, \
-			driver_races_up_to_this_season = driverRaces.count,\
-			races_record_up_to_this_season = racesRecord.count, \
-			championships = driverChampionships.count, \
-			champion_this_season = seasonChampion.driver_id==driver.id,\
-			better_than_teammate = betterInTeam\
+			races_until_now = driverRaces.count,\
+			races_record_until_now = racesRecord.count, \
+			championships_until_now = driverChampionships.count, \
+			championships_record_until_now = championshipsRecord.count,\
+			champion_this_season = seasonChampion.driver_id==driver.id\
 		)
 		SESSION.add(baseScore)
 		SESSION.commit()

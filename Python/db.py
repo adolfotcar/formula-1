@@ -67,16 +67,16 @@ class BaseScore(BASE):
 	wet_podiums = Column(Integer)
 	gained_positions = Column(Integer)
 	lost_positions = Column(Integer)
-	retirements_for_colisions = Column(Integer)
+	retirements_for_collisions = Column(Integer)
 	points = Column(Integer)
 	wins_not_from_pole = Column(Integer)
 	starting_position = Column(Integer)
 	season_races = Column(Integer)
-	driver_races_up_to_this_season = Column(Integer)
-	races_record_up_to_this_season = Column(Integer)
-	championships = Column(Integer)
+	races_until_now = Column(Integer)
+	races_record_until_now = Column(Integer)
+	championships_until_now = Column(Integer)
+	championships_record_until_now = Column(Integer)
 	champion_this_season = Column(Boolean)
-	better_than_teammate = Column(Boolean)
 
 class RefinedScore(BASE):
 	__tablename__ = "refined_scores"
