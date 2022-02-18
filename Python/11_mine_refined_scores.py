@@ -37,22 +37,36 @@ def getBaseScore(driverId, year):
 	#getting how many seasons the driver raced
 	driverSeasonRaces = SESSION.query(func.count(RaceResult.id).label("count")).join(Race).filter(Race.year==year, RaceResult.driver_id==driverId).first()
 	#calculating the base score
-	baseScore = (score.wins/score.races+\
-				score.podiums/score.races+\
-				score.poles/score.races+\
-				score.front_rows/score.races+\
-				(score.wet_wins/score.wet_races if score.wet_races>0 else 0)+\
-				(score.wet_podiums/score.wet_races if score.wet_races>0 else 0)+\
-				((score.gained_positions/score.races)-(score.lost_positions/score.races))/(score.starting_position/score.races)+\
-				(score.races-score.retirements_for_colisions)/score.races+\
-				score.points/score.races/25+\
-				(score.wins_not_from_pole/score.wins if score.wins>0 else 0)+\
-				driverSeasonRaces.count/seasonRaces.count+\
-				score.championships/7+\
-				score.races/racesRecord.count\
-				)/13
+	baseScore1 = ((score.wins/score.races)*0.253779+\
+				(score.podiums/score.races)*0.153287+\
+				(score.poles/score.races)*0.153568+\
+				(score.front_rows/score.races)*0.032041+\
+				(score.wet_wins/score.wet_races if score.wet_races>0 else 0)*0.003438+\
+				(score.wet_podiums/score.wet_races if score.wet_races>0 else 0)*0.015253+\
+				((score.gained_positions/score.races)-(score.lost_positions/score.races))/(score.starting_position/score.races)*0.041510+\
+				((score.races-score.retirements_for_colisions)/score.races)*0.024952+\
+				(score.points/score.races/25)*0.133746+\
+				(score.wins_not_from_pole/score.wins if score.wins>0 else 0)*0.065851+\
+				(driverSeasonRaces.count/seasonRaces.count)*0.022056+\
+				(score.championships/7)*0.066482+\
+				(score.races/racesRecord.count)*0.034037\
+				)
+	baseScore2 = ((score.wins/score.races)*0.052309+\
+				(score.podiums/score.races)*0.051294+\
+				(score.poles/score.races)*0.020850+\
+				(score.front_rows/score.races)*0.031198+\
+				(score.wet_wins/score.wet_races if score.wet_races>0 else 0)*0.005856+\
+				(score.wet_podiums/score.wet_races if score.wet_races>0 else 0)*0.015889+\
+				((score.gained_positions/score.races)-(score.lost_positions/score.races))/(score.starting_position/score.races)*0.177965+\
+				((score.races-score.retirements_for_colisions)/score.races)*0.080688+\
+				(score.points/score.races/25)*0.205822+\
+				(score.wins_not_from_pole/score.wins if score.wins>0 else 0)*0.010879+\
+				(driverSeasonRaces.count/seasonRaces.count)*0.159483+\
+				(score.championships/7)*0.036820+\
+				(score.races/racesRecord.count)*0.150948\
+				)
 
-	return baseScore
+	return baseScore1+baseScore2/2
 
 #points system in F1
 points = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
@@ -126,20 +140,17 @@ for ids in idLists:
 						else:
 							startAheadOfMate += 1
 				teamPoints = driverPoints+matePoints
-				dbBaseScore = SESSION.query(BaseScore).filter(BaseScore.driver_id==driverId, BaseScore.year==season.year).first()
-				dbBaseScore.better_than_teammate = 1 if finishAheadOfMate>(racesTogether/2) else 0
-				SESSION.commit()
-				dbBaseScore2 = SESSION.query(BaseScore).filter(BaseScore.driver_id==teamMate.driver_id, BaseScore.year==season.year).first()
-				dbBaseScore2.better_than_teammate = 1 if finishAheadOfMate<=math.floor(racesTogether/2) else 0
-				SESSION.commit()				
 				#only increments season score, if they actually had at least one race together
-				if racesTogether!=0:
+				if racesTogether!=0:					
+					"""
 					#if the team didnt score any points, have to avoid division by 0
 					if teamPoints==0:
 						score += ((math.sqrt(driverScore*mateScore)*14) + (finishAheadOfMate/racesTogether) + (startAheadOfMate/racesTogether))/16
 					else:
 						if mateScore>0:
 							score += ((math.sqrt(driverScore*mateScore)*13) + (finishAheadOfMate/racesTogether) + (driverPoints/teamPoints)+(startAheadOfMate/racesTogether))/16
+					"""
+					score += math.sqrt(driverScore*mateScore)
 			#geting the final average of scores against all teammates this season
 			refinedScore += score/len(seasonTeamMates)
 		#getting the final refined score

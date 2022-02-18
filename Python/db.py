@@ -71,6 +71,10 @@ class BaseScore(BASE):
 	points = Column(Integer)
 	wins_not_from_pole = Column(Integer)
 	starting_position = Column(Integer)
+	season_races = Column(Integer)
+	driver_races_up_to_this_season = Column(Integer)
+	races_record_up_to_this_season = Column(Integer)
+	championships = Column(Integer)
 	champion_this_season = Column(Boolean)
 	better_than_teammate = Column(Boolean)
 

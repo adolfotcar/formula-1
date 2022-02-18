@@ -27,6 +27,8 @@ prediction_test = model.predict(X_test)
 from sklearn import metrics
 accuracy = metrics.accuracy_score(Y_test, prediction_test)
 
+print(accuracy)
+
 feature_list = list(X.columns)
 feature_imp = pandas.Series(model.feature_importances_, index=feature_list).sort_values(ascending=False)
 
