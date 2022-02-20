@@ -1,11 +1,8 @@
 #calculates and saves the parameters for base scores
 #saves one line per season per driver
 
-from db import Driver, Race, RaceResult, BaseScore, RefinedScore, Champion, Standing, Lineup, SESSION
+from db import Driver, Race, RaceResult, BaseScoreStats, Champion, SESSION
 from sqlalchemy.sql import func, text
-import pandas
-import os
-import math
 
 #from the retirement reson, detects when it was caused by some form of collision
 crashesStrings = ['accident', 'collision', 'avoiding action', 'crash', 'spun', 'spin', 'handling', 'hit']
@@ -71,7 +68,7 @@ for driver in drivers:
 					driverPoints += points[raceResult.finishing_position-1]
 		racesCount = len(driverSeasonRaces)
 
-		baseScore = BaseScore(driver_id = driver.id, \
+		baseScore = BaseScoreStats(driver_id = driver.id, \
 			year=year,\
 			races = racesCount, \
 			wins = wins, \
@@ -82,7 +79,7 @@ for driver in drivers:
 			wet_wins = wetWins, \
 			wet_podiums = wetPodiums, \
 			gained_positions = gainedPositions, \
-			lost_positions = lostPositions, \
+			lost_positions = lostPositions if gainedPositions>lostPositions else gainedPositions, \
 			retirements_for_collisions = retirementForCollisions, \
 			points = driverPoints, \
 			wins_not_from_pole = winsNotFromPole,\

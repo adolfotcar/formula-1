@@ -1,11 +1,9 @@
 #compares driver's stats against all their teammates in order to obtain the refined score
 #only ran for drivers who won the compaionship or that are still driving(coz they can still becom champions)
 
-from db import Driver, Race, RaceResult, BaseScore, Champion, RefinedScore, SESSION
-from sqlalchemy.sql import func, text
+from db import Driver, Race, RaceResult, BaseScoreStats, Champion, RefinedScore, SESSION
 from sqlalchemy import case
-import pandas
-import os
+from sqlalchemy.sql import func, text
 import math
 
 #receives the driver ID and the year to be considered. 
@@ -14,41 +12,41 @@ import math
 def getBaseScore(driverId, year):
 
 	#reading the values from the base_scores table
-	score = SESSION.query(func.sum(BaseScore.races).label("races"),\
-							func.sum(BaseScore.wins).label("wins"),\
-							func.sum(BaseScore.podiums).label("podiums"),\
-							func.sum(BaseScore.poles).label("poles"),\
-							func.sum(BaseScore.front_rows).label("front_rows"),\
-							func.sum(BaseScore.wet_races).label("wet_races"),\
-							func.sum(BaseScore.wet_wins).label("wet_wins"),\
-							func.sum(BaseScore.wet_podiums).label("wet_podiums"),\
-							func.sum(BaseScore.gained_positions).label("gained_positions"),\
-							func.sum(BaseScore.lost_positions).label("lost_positions"),\
-							func.sum(BaseScore.starting_position).label("starting_position"),\
-							func.sum(BaseScore.retirements_for_collisions).label("retirements_for_colisions"),\
-							func.sum(BaseScore.points).label("points"),\
-							func.sum(BaseScore.wins_not_from_pole).label("wins_not_from_pole"),\
-							func.sum(BaseScore.season_races).label("season_races"),\
-							func.max(BaseScore.championships_record_until_now).label("championships_record_until_now"),\
-							func.max(BaseScore.races_until_now).label("races_until_now"),\
-							func.max(BaseScore.races_record_until_now).label("races_record_until_now"),\
-							func.sum(BaseScore.champion_this_season).label("championships"))\
-						.filter(BaseScore.driver_id==driverId, BaseScore.year<=year).first()
+	score = SESSION.query(func.sum(BaseScoreStats.races).label("races"),\
+							func.sum(BaseScoreStats.wins).label("wins"),\
+							func.sum(BaseScoreStats.podiums).label("podiums"),\
+							func.sum(BaseScoreStats.poles).label("poles"),\
+							func.sum(BaseScoreStats.front_rows).label("front_rows"),\
+							func.sum(BaseScoreStats.wet_races).label("wet_races"),\
+							func.sum(BaseScoreStats.wet_wins).label("wet_wins"),\
+							func.sum(BaseScoreStats.wet_podiums).label("wet_podiums"),\
+							func.sum(BaseScoreStats.gained_positions).label("gained_positions"),\
+							func.sum(BaseScoreStats.lost_positions).label("lost_positions"),\
+							func.sum(BaseScoreStats.starting_position).label("starting_position"),\
+							func.sum(BaseScoreStats.retirements_for_collisions).label("retirements_for_collisions"),\
+							func.sum(BaseScoreStats.points).label("points"),\
+							func.sum(BaseScoreStats.wins_not_from_pole).label("wins_not_from_pole"),\
+							func.sum(BaseScoreStats.season_races).label("season_races"),\
+							func.max(BaseScoreStats.championships_record_until_now).label("championships_record_until_now"),\
+							func.max(BaseScoreStats.races_until_now).label("races_until_now"),\
+							func.max(BaseScoreStats.races_record_until_now).label("races_record_until_now"),\
+							func.sum(BaseScoreStats.champion_this_season).label("championships"))\
+						.filter(BaseScoreStats.driver_id==driverId, BaseScoreStats.year<=year).first()
 	
 	#calculating the base score
-	baseScore = ((score.wins/score.races)*0.231184+\
-				(score.podiums/score.races)*0.120778+\
-				(score.poles/score.races)*0.139059+\
-				(score.front_rows/score.races)*0.048894+\
-				(score.wet_wins/score.wet_races if score.wet_races>0 else 0)*0.001676+\
-				(score.wet_podiums/score.wet_races if score.wet_races>0 else 0)*0.019313+\
-				((score.gained_positions/score.races)-(score.lost_positions/score.races))/(score.starting_position/score.races)*0.026437+\
-				((score.races-score.retirements_for_colisions)/score.races)*0.016817+\
-				(score.points/score.races/25)*0.130525+\
-				(score.wins_not_from_pole/score.wins if score.wins>0 else 0)*0.053239+\
-				(score.races/score.season_races)*0.038212+\
-				(score.championships/score.championships_record_until_now)*0.118808+\
-				(score.races/score.races_record_until_now)*0.055056\
+	baseScore = ((score.wins/score.races)*0.227474+\
+				(score.podiums/score.races)*0.086604+\
+				(score.poles/score.races)*0.106152+\
+				(score.front_rows/score.races)*0.044463+\
+				(score.wet_wins/score.wet_races if score.wet_races>0 else 0)*0.014864+\
+				(score.wet_podiums/score.wet_races if score.wet_races>0 else 0)*0.016290+\
+				((score.gained_positions/score.races)-(score.lost_positions/score.races))/(score.starting_position/score.races)*0.038639+\
+				((score.races-score.retirements_for_collisions)/score.races)*0.017322+\
+				(score.points/score.races/25)*0.164522+\
+				(score.wins_not_from_pole/score.wins if score.wins>0 else 0)*0.047705+\
+				(score.races/score.season_races)*0.030252+\
+				(score.championships/score.championships_record_until_now)*0.166374+\
+				(score.races/score.races_record_until_now)*0.039338\
 				)
 
 	return baseScore
@@ -129,15 +127,15 @@ for ids in idLists:
 				if racesTogether!=0:					
 					#if the team didnt score any points, have to avoid division by 0
 					if teamPoints==0:
-						score += ((math.sqrt(driverScore*mateScore)*14) + (finishAheadOfMate/racesTogether) + (startAheadOfMate/racesTogether))/16
+						score += math.sqrt(driverScore*mateScore)*14 + finishAheadOfMate/racesTogether + startAheadOfMate/racesTogether
 					else:
 						if mateScore>0:
-							score += ((math.sqrt(driverScore*mateScore)*13) + (finishAheadOfMate/racesTogether) + (driverPoints/teamPoints)+(startAheadOfMate/racesTogether))/16
+							score += math.sqrt(driverScore*mateScore)*13 + finishAheadOfMate/racesTogether + driverPoints/teamPoints+startAheadOfMate/racesTogether
 			#geting the final average of scores against all teammates this season
-			refinedScore += score/len(seasonTeamMates)
+			refinedScore += score/(16*len(seasonTeamMates))
 		#getting the final refined score
 		refinedScore = refinedScore/len(seasons)	
-		refinedScore =  RefinedScore(driver_id=driverId, base_score=driverScore, refined_score=refinedScore, won_championships=miningChampions)
+		refinedScore =  RefinedScore(driver_id=driverId, refined_score=refinedScore, won_championships=miningChampions)
 		SESSION.add(refinedScore)
 		SESSION.commit()
 	miningChampions = False

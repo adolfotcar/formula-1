@@ -1,8 +1,6 @@
 #reads reace results table and builds the standings according to current ponctuation rules
 
-from db import Driver, Race, RaceResult, Standing, SESSION
-import pandas
-import os
+from db import Race, RaceResult, Standing, SESSION
 
 racesPath = '../datasets/races/'
 

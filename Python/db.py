@@ -51,8 +51,8 @@ class Standing(BASE):
 	driver_id = Column(Integer, ForeignKey('drivers.id'))
 	points = Column(Integer)
 
-class BaseScore(BASE):
-	__tablename__ = "base_scores"
+class BaseScoreStats(BASE):
+	__tablename__ = "base_score_stats"
 
 	id = Column(Integer, primary_key=True, autoincrement=True)
 	driver_id = Column(Integer, ForeignKey('drivers.id'))	
@@ -78,12 +78,20 @@ class BaseScore(BASE):
 	championships_record_until_now = Column(Integer)
 	champion_this_season = Column(Boolean)
 
+class BaseScore(BASE):
+	__tablename__ = "base_scores"
+
+	id = Column(Integer, primary_key=True, autoincrement=True)
+	driver_id = Column(Integer, ForeignKey('drivers.id'))
+	year = Column(Integer)
+	career_score = Column(Float)
+	season_score = Column(Float)
+
 class RefinedScore(BASE):
 	__tablename__ = "refined_scores"
 
 	id = Column(Integer, primary_key=True, autoincrement=True)
 	driver_id = Column(Integer, ForeignKey('drivers.id'))
-	base_score = Column(Float)
 	refined_score = Column(Float)
 	won_championships = Column(Boolean)
 
