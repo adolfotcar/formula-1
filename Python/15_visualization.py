@@ -2,8 +2,9 @@ from db import RefinedScore, Driver, BaseScoreStats, BaseScore, SESSION
 from sqlalchemy import func, case
 import pandas
 import matplotlib.pyplot as plt
+import numpy as np
 
-scoresChamps = pandas.read_sql(SESSION.query(func.round(RefinedScore.refined_score, 4).label("score"), Driver.name, Driver.surname).\
+"""scoresChamps = pandas.read_sql(SESSION.query(func.round(RefinedScore.refined_score, 4).label("score"), Driver.name, Driver.surname).\
 								join(Driver).filter(RefinedScore.won_championships==1).order_by(RefinedScore.refined_score).statement, \
 								SESSION.bind)
 scoresCurrent = pandas.read_sql(SESSION.query(func.round(RefinedScore.refined_score, 4).label("score"), Driver.name, Driver.surname).\
@@ -55,9 +56,116 @@ baseScores.plot(kind='hist', bins=100)
 championsScores = pandas.read_sql(SESSION.query(RefinedScore.refined_score).filter(RefinedScore.won_championships==True).statement, SESSION.bind)
 championsScores.plot(kind='hist', bins= 10)
 
+"""
 
-import plotly.express as px
-df = pandas.read_sql(baseScoreQuery.filter(BaseScoreStats.driver_id==722).statement, SESSION.bind)
+parameters = ['Wins', \
+            'Podiums', \
+            'Poles', \
+            'Front Rows', \
+            'Wet Wins', \
+            'Wet Podiums', \
+            'Positioning', \
+            'Collision Avoidance', \
+            'Points', \
+            'Wins Not From Pole', \
+            'Season Races', \
+            'Championships', \
+            'Career Races', '']
+    
+query = SESSION.query(	func.sum(BaseScoreStats.races).label("races"),\
+                            func.sum(BaseScoreStats.wins).label("wins"),\
+							func.sum(BaseScoreStats.podiums).label("podiums"),\
+							func.sum(BaseScoreStats.poles).label("poles"),\
+							func.sum(BaseScoreStats.front_rows).label("front_rows"),\
+							func.sum(BaseScoreStats.wet_races).label("wet_races"),\
+							func.sum(BaseScoreStats.wet_wins).label("wet_wins"),\
+							func.sum(BaseScoreStats.wet_podiums).label("wet_podiums"),\
+							func.sum(BaseScoreStats.gained_positions).label("gained_positions"),\
+							func.sum(BaseScoreStats.lost_positions).label("lost_positions"),\
+							func.sum(BaseScoreStats.starting_position).label("starting_position"),\
+							func.sum(BaseScoreStats.retirements_for_collisions).label("retirements_for_collisions"),\
+							func.sum(BaseScoreStats.points).label("points"),\
+							func.sum(BaseScoreStats.wins_not_from_pole).label("wins_not_from_pole"),\
+							func.sum(BaseScoreStats.season_races).label("season_races"),\
+							func.max(BaseScoreStats.championships_record_until_now).label("championships_record_until_now"),\
+							func.max(BaseScoreStats.races_until_now).label("races_until_now"),\
+							func.max(BaseScoreStats.races_record_until_now).label("races_record_until_now"),\
+                            func.sum(BaseScoreStats.champion_this_season).label("championships")\
+                        )
+score =query.filter(BaseScoreStats.driver_id==722).first()
+hamilton = [(score.wins/score.races),\
+        (score.podiums/score.races),\
+        (score.poles/score.races),\
+        (score.front_rows/score.races),\
+        (score.wet_wins/score.wet_races if score.wet_races>0 else 0),\
+        (score.wet_podiums/score.wet_races if score.wet_races>0 else 0),\
+        ((score.gained_positions/score.races)-(score.lost_positions/score.races))/(score.starting_position/score.races),\
+        ((score.races-score.retirements_for_collisions)/score.races),\
+        (score.points/score.races/25),\
+        (score.wins_not_from_pole/score.wins if score.wins>0 else 0),\
+        (score.races/score.season_races),\
+        (score.championships/score.championships_record_until_now),\
+        (score.races/score.races_record_until_now)]    
+hamilton = np.concatenate((hamilton, [hamilton[0]]))
 
-fig = px.line_polar(df, theta=['wins', 'podiums', 'poles', 'front_rows', 'wet_wins', 'wet_podiums', 'positions', 'collisions', 'points', 'wins not from pole', 'season_races', 'championships', 'career_races'], line_close=True)
-fig.show()
+
+score =query.filter(BaseScoreStats.driver_id==587).first()
+senna = [(score.wins/score.races),\
+        (score.podiums/score.races),\
+        (score.poles/score.races),\
+        (score.front_rows/score.races),\
+        (score.wet_wins/score.wet_races if score.wet_races>0 else 0),\
+        (score.wet_podiums/score.wet_races if score.wet_races>0 else 0),\
+        ((score.gained_positions/score.races)-(score.lost_positions/score.races))/(score.starting_position/score.races),\
+        ((score.races-score.retirements_for_collisions)/score.races),\
+        (score.points/score.races/25),\
+        (score.wins_not_from_pole/score.wins if score.wins>0 else 0),\
+        (score.races/score.season_races),\
+        (score.championships/score.championships_record_until_now),\
+        (score.races/score.races_record_until_now)]    
+senna = np.concatenate((senna, [senna[0]]))
+
+score =query.filter(BaseScoreStats.driver_id==555).first()
+prost = [(score.wins/score.races),\
+        (score.podiums/score.races),\
+        (score.poles/score.races),\
+        (score.front_rows/score.races),\
+        (score.wet_wins/score.wet_races if score.wet_races>0 else 0),\
+        (score.wet_podiums/score.wet_races if score.wet_races>0 else 0),\
+        ((score.gained_positions/score.races)-(score.lost_positions/score.races))/(score.starting_position/score.races),\
+        ((score.races-score.retirements_for_collisions)/score.races),\
+        (score.points/score.races/25),\
+        (score.wins_not_from_pole/score.wins if score.wins>0 else 0),\
+        (score.races/score.season_races),\
+        (score.championships/score.championships_record_until_now),\
+        (score.races/score.races_record_until_now)]    
+prost = np.concatenate((prost, [prost[0]]))
+
+score =query.filter(BaseScoreStats.driver_id==1).first()
+fangio = [(score.wins/score.races),\
+        (score.podiums/score.races),\
+        (score.poles/score.races),\
+        (score.front_rows/score.races),\
+        (score.wet_wins/score.wet_races if score.wet_races>0 else 0),\
+        (score.wet_podiums/score.wet_races if score.wet_races>0 else 0),\
+        ((score.gained_positions/score.races)-(score.lost_positions/score.races))/(score.starting_position/score.races),\
+        ((score.races-score.retirements_for_collisions)/score.races),\
+        (score.points/score.races/25),\
+        (score.wins_not_from_pole/score.wins if score.wins>0 else 0),\
+        (score.races/score.season_races),\
+        (score.championships/score.championships_record_until_now),\
+        (score.races/score.races_record_until_now)]    
+fangio = np.concatenate((fangio, [fangio[0]]))
+
+label_placement = np.linspace(start=0, stop=2*np.pi, num=len(hamilton))
+
+
+plt.figure(figsize=(10, 10))
+plt.subplot(polar=True)
+plt.plot(label_placement, hamilton)
+plt.plot(label_placement, prost)
+plt.plot(label_placement, fangio)
+plt.plot(label_placement, senna)
+lines, labels = plt.thetagrids(np.degrees(label_placement), labels=parameters)
+plt.title('Driver', y=1.1, fontdict={'fontsize': 18})
+plt.legend(labels=['Hamilton', 'Prost', 'Fangio', 'Senna'], loc=(0.95, 0.8))

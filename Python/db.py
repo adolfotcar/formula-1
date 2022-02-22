@@ -76,7 +76,7 @@ class BaseScoreStats(BASE):
 	races_record_until_now = Column(Integer)
 	championships_until_now = Column(Integer)
 	championships_record_until_now = Column(Integer)
-	champion_this_season = Column(Boolean)
+	champion_this_season = Column(Integer)
 
 class BaseScore(BASE):
 	__tablename__ = "base_scores"
